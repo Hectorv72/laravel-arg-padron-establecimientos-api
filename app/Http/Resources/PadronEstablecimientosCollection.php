@@ -15,10 +15,6 @@ class PadronEstablecimientosCollection extends ResourceCollection
     public static $wrap = null;
     public function toArray($request)
     {
-      // return [
-      //     'establecimientos' => $this->collection,
-      //     'total' => $this->collection->count()
-      //   ];
       return $this->collection;
     }
 }

@@ -114,9 +114,10 @@ class PadronEstablecimientosController extends Controller
 
     if($request->query('limit') !== null){
       $limit = intval($request->query('limit'));
-      if($limit <= 300){
-        $data = $data->limit($limit);
-      }
+      // if($limit <= 300){
+      //   $data = $data->limit($limit);
+      // }
+      $data = $data->limit($limit);
     } else {
       $data = $data->limit(300);
     }
