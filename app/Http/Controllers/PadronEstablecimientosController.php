@@ -6,67 +6,153 @@ use Illuminate\Http\Request;
 use App\Models\PadronEstablecimientosModel;
 use App\Http\Resources\PadronEstablecimientosResource;
 use App\Http\Resources\PadronEstablecimientosCollection;
-
+use Illuminate\Support\Facades\DB;
 class PadronEstablecimientosController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-        // return response()->json(PadronEstablecimientosModel::take(100),200);
-        // return response()->json(PadronEstablecimientosModel::find(1),200);
-        // $data = PadronEstablecimientosModel::take(100)->simplePaginate(100);
-        $data = PadronEstablecimientosModel::limit(100)->get();
-        return new PadronEstablecimientosCollection($data);
+
+  private function search($model,$request){
+
+    $data = $model;
+    $condition = [];
+
+    // GENERAL
+
+    if($request->query('cue') !== null){
+      array_push($condition,['cue',$request->query('cue')]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
+    if($request->query('cueanexo') !== null){
+      array_push($condition,['cueanexo',$request->query('cueanexo')]);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-        return response()->json(PadronEstablecimientosModel::find($id),200);
+    if($request->query('nombre') !== null){
+      $nombre = mb_strtolower((urldecode(($request->query('nombre')))), 'UTF-8');
+      array_push($condition,[DB::raw('lower(nombre)'),'LIKE','%'.$nombre.'%' ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
+    // LOCALIZACION
+
+    if($request->query('jurisdiccion') !== null){
+      $jurisdiccion = mb_strtolower((urldecode(($request->query('jurisdiccion')))), 'UTF-8');
+      array_push($condition,[DB::raw('lower(jurisdiccion)'),$jurisdiccion]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+    if($request->query('sector') !== null){
+      array_push($condition,[DB::raw('lower(sector)'),strtolower($request->query('sector'))]);
     }
+
+    if($request->query('ambito') !== null){
+      array_push($condition,[DB::raw('lower(ambito)'),strtolower($request->query('ambito'))]);
+    }
+
+    if($request->query('departamento') !== null){
+      $departamento = mb_strtolower((urldecode(($request->query('departamento')))), 'UTF-8');
+      array_push($condition,[DB::raw('lower(departamento)'),$departamento]);
+    }
+
+    if($request->query('cod_departamento') !== null){
+      array_push($condition,['cod_departamento',$request->query('cod_departamento')]);
+    }
+
+    if($request->query('localidad') !== null){
+      $localidad = mb_strtolower((urldecode(($request->query('localidad')))), 'UTF-8');
+      array_push($condition,[DB::raw('lower(localidad)'),$localidad]);
+    }
+
+    if($request->query('cod_localidad') !== null){
+      array_push($condition,['cod_localidad',$request->query('cod_localidad')]);
+    }
+
+    if($request->query('domicilio') !== null){
+      $domicilio = mb_strtolower((urldecode(($request->query('domicilio')))), 'UTF-8');
+      array_push($condition,[DB::raw('lower(domicilio)'),'LIKE','%'.$domicilio.'%' ]);
+    }
+
+    if($request->query('cod_postal') !== null){
+      array_push($condition,[DB::raw('lower(cod_postal)'),strtolower($request->query('cod_postal'))]);
+    }
+
+    // MODALIDADES
+
+    if($request->query('educacion_comun') == 1){
+      array_push($condition,['ed_comun',1]);
+    }
+
+    if($request->query('educacion_especial') == 1){
+      array_push($condition,['ed_especial',1]);
+    }
+
+    if($request->query('educacion_jovenes_y_adultos') == 1){
+      array_push($condition,['ed_jovenes_adultos',1]);
+    }
+
+    if($request->query('educacion_artistica') == 1){
+      array_push($condition,['ed_artistica',1]);
+    }
+
+    if($request->query('educacion_hospitalaria_domiciliaria') == 1){
+      array_push($condition,['ed_hospitalaria_domiciliaria',1]);
+    }
+
+    if($request->query('educacion_intercultural_bilingue') == 1){
+      array_push($condition,['ed_intercultural_bilingue',1]);
+    }
+
+    if($request->query('educacion_contexto_encierro') == 1){
+      array_push($condition,['ed_contexto_encierro',1]);
+    }
+
+
+    $data = $data->where($condition);
+
+    // LIMIT Y OFFSET
+
+    if($request->query('offset') !== null){
+      $offset = intval($request->query('offset'));
+      $data = $data->offset($offset);
+    }
+
+    if($request->query('limit') !== null){
+      $limit = intval($request->query('limit'));
+      if($limit <= 300){
+        $data = $data->limit($limit);
+      }
+    } else {
+      $data = $data->limit(300);
+    }
+
+    $data = $data->get();
+      return $data;
+
+    try {
+      $data = $data->get();
+      return $data;
+    } catch (\Throwable $th) {
+      return [];
+      //throw $th;
+    }
+
+  }
+
+    /**
+   * Display a listing of the resource.
+   *
+   * @return \Illuminate\Http\Response
+   */
+  public function index(Request $request)
+  {
+    $data = $this->search(new PadronEstablecimientosModel,$request);
+    return new PadronEstablecimientosCollection($data);
+  }
+
+  /**
+   * Display the specified resource.
+   *
+   * @param  int  $id
+   * @return \Illuminate\Http\Response
+   */
+  public function show($id)
+  {
+    return new PadronEstablecimientosResource(PadronEstablecimientosModel::find($id));
+  }
 }

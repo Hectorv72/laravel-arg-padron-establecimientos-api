@@ -12,12 +12,13 @@ class PadronEstablecimientosCollection extends ResourceCollection
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public static $wrap = "establecimientos";
+    public static $wrap = null;
     public function toArray($request)
     {
-      return [
-          'establecimientos' => $this->collection,
-          'total' => $this->collection->count()
-        ];
+      // return [
+      //     'establecimientos' => $this->collection,
+      //     'total' => $this->collection->count()
+      //   ];
+      return $this->collection;
     }
 }
